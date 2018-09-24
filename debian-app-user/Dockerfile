@@ -2,7 +2,7 @@ FROM debian:stretch
 
 # 時間をJSTに設定する
 RUN set -xe && \
-	rm /etc/localtime && \
+	rm -f /etc/localtime && \
 	ln -s /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
 	echo 'Asia/Tokyo' > /etc/timezone
 
