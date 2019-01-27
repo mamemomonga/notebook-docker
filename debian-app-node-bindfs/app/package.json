@@ -1,0 +1,16 @@
+{
+  "name": "debian-app-node-bindfs",
+  "version": "1.0.0",
+  "description": "* 時間をJSTにする * gosu のインストール * appユーザの作成",
+  "main": "app.js",
+  "scripts": {
+	"app": "babel-node ./app.js"
+  },
+  "author": "mamemomonga",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/node": "^7.2.2",
+    "@babel/preset-env": "^7.3.1"
+  }
+}
