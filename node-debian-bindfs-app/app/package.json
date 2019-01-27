@@ -1,7 +1,7 @@
 {
-  "name": "debian-app-node-bindfs",
+  "name": "node-debian-bindfs-app",
   "version": "1.0.0",
-  "description": "* 時間をJSTにする * gosu のインストール * appユーザの作成",
+  "description": "",
   "main": "app.js",
   "scripts": {
 	"app": "babel-node ./app.js"
