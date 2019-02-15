@@ -1,0 +1,15 @@
+syntax on
+set wildmenu
+set history=100
+set number
+set scrolloff=5
+set autowrite
+set tabstop=4
+set shiftwidth=4
+set softtabstop=0
+set termencoding=utf-8
+set encoding=utf-8
+set fileencodings=iso-2022-jp,utf-8,cp932,euc-jp,ucs2le,ucs-2
+set fenc=utf-8
+set enc=utf-8
+
