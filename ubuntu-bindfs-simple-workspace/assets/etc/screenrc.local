@@ -1,0 +1,12 @@
+defutf8 on
+defencoding utf8
+encoding utf8 utf8
+startup_message off
+vbell off
+escape ^aA
+defscrollback 10000
+altscreen on
+defbce on
+term xterm-256color
+hardstatus alwayslastline "%{= cd} %-w%{= wk} %n %t* %{-}%+w"
+shell /bin/bash

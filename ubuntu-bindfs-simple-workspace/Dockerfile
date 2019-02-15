@@ -10,8 +10,7 @@ RUN set -xe && \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
 		gosu curl apt-transport-https \
-		git-core locales vim sudo \
-		build-essential && \
+		git-core locales vim sudo screen make man && \
 	rm -rf /var/lib/apt/lists/*
 
 RUN set -xe && \
@@ -26,4 +25,7 @@ RUN set -xe && \
 
 ADD assets/ /
 
-ENTRYPOINT ["/entrypoint.sh"]
+RUN set -xe && \
+	echo 'source /etc/screenrc.local' >> /etc/screenrc
+
+
