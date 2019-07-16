@@ -12,5 +12,11 @@
 このコマンドを実行するとすべてのデータベースとパスワードが削除される
 
 	$ ./databases.sh create
+	$ docker-compose up -d
+	$ ./database.sh myql
+	MariaDB [(none)]> exit
 
+	$ ./database.sh psql
+	postgres=# \q
 
+	$ ./database.sh destroy

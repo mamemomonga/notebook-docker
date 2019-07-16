@@ -1,8 +1,8 @@
 version: "3.7"
 
 volumes:
-  mysql: { external: { name: "${COMPOSE_PROJECT_NAME}-mysql" }}
-  pgsql: { external: { name: "${COMPOSE_PROJECT_NAME}-pgsql" }}
+  mariadb: { external: { name: "${COMPOSE_PROJECT_NAME}-mariadb" }}
+  pgsql:   { external: { name: "${COMPOSE_PROJECT_NAME}-pgsql"   }}
 
 networks:
    default:
@@ -15,7 +15,7 @@ services:
   mariadb:
     image: mariadb:10.4
     volumes:
-      - mysql:/var/lib/mysql
+      - mariadb:/var/lib/mysql
       - ./etc/my.cnf:/etc/mysql/conf.d/my.cnf:ro
     ports:
       - 13306:3306
