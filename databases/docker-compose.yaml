@@ -1,0 +1,31 @@
+version: "3.7"
+
+volumes:
+  mysql: { external: { name: "${COMPOSE_PROJECT_NAME}-mysql" }}
+  pgsql: { external: { name: "${COMPOSE_PROJECT_NAME}-pgsql" }}
+
+networks:
+   default:
+     ipam:
+       driver: default
+       config:
+        - subnet: "172.22.2.0/24"
+
+services:
+  mariadb:
+    image: mariadb:10.4
+    volumes:
+      - mysql:/var/lib/mysql
+      - ./etc/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+    ports:
+      - 13306:3306
+
+  pgsql:
+    image: postgres:11
+    volumes:
+      - pgsql:/var/lib/postgresql/data
+      - ./etc/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
+    ports:
+      - 15432:5432
+
