@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-	"app": "babel-node ./app.js"
+    "app": "babel-node ./app.js"
   },
   "author": "mamemomonga",
   "license": "MIT",
