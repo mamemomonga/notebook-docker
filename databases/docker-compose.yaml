@@ -2,7 +2,7 @@ version: "3.7"
 
 volumes:
   mariadb: { external: { name: "${COMPOSE_PROJECT_NAME}-mariadb" }}
-  pgsql:   { external: { name: "${COMPOSE_PROJECT_NAME}-pgsql"   }}
+  pgsql:   { external: { name: "${COMPOSE_PROJECT_NAME}-pgsql" }}
 
 networks:
    default:

@@ -1,0 +1,200 @@
+#!/bin/bash
+
+# 変数リスト
+# COMMANDS コマンドリスト
+# BASEDIR  ベースディレクトリ
+# ENVFILE  .envファイル
+
+# .env ファイルを読み込んでシェル変数として展開
+env_load() {
+	if [ -e $ENVFILE ]; then
+		eval $( cat $ENVFILE | perl -E 'while(<>) { if (s#^([^=]+)=(.+)$#$1="$2"#) { print }}' )
+	fi
+}
+
+# 特定のシェル変数を.env ファイルに追記
+env_save() {
+	local name=$1
+	# 値を追記、すでに値があれば置換する
+	perl - $ENVFILE $name "$(eval 'echo $'$name)" << 'EOS'
+use strict;
+my $buf;
+my $flag=0;
+open(my $fhi,"<",$ARGV[0]) || die $!;
+foreach(<$fhi>) {
+	if(m#^$ARGV[1]=#) {
+		$buf.="$ARGV[1]=$ARGV[2]\n";
+		$flag=1;
+	} else {
+		$buf.=$_
+	}
+}
+if(!$flag) {
+	$buf.="$ARGV[1]=$ARGV[2]\n";
+}
+open(my $fho,">",$ARGV[0]) || die $!;
+print $fho $buf;
+EOS
+}
+
+# パスワードの生成
+password_generate() {
+	local valname=$1
+	local password=$( perl -E 'my @chars; for(my $i=0;$i<$ARGV[1];$i++) { push @chars,substr($ARGV[0],int(rand()*length($ARGV[0])),1) }; say join("",@chars);' 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789' 16 )
+	eval $valname'="'$password'"'
+	env_save $valname
+}
+
+# ボリュームの作成
+volume_create() {
+	local name=$1
+	if [ -n "$( docker volume ls -q | grep $name )" ]; then
+		echo "Volume: $name already exists."
+		exit 1
+	fi
+	docker volume create $name
+}
+
+# DBとユーザの作成
+create_db_users() {
+	local callback=$1
+	local prefix=$2
+	local i
+	local cmd
+	local db
+	local user
+	local password
+	for i in {1..10}; do
+		db="$(eval 'echo "${'$prefix'_'$i'_DB:-}"')"
+		if [ -n "$db" ]; then
+			user="$(eval 'echo "${'$prefix'_'$i'_USER:-}"')"
+			password="$(eval 'echo "${'$prefix'_'$i'_PASSWORD:-}"')"
+			cmd=$callback' $i "'$db'" "'$user'" "'$password'"'
+			eval $cmd
+		fi
+	done
+}
+
+# 破壊
+destroy() {
+	docker-compose down || true
+	docker volume rm $COMPOSE_PROJECT_NAME'-'$SERVICE_MYSQL || true
+	docker volume rm $COMPOSE_PROJECT_NAME'-'$SERVICE_PGSQL || true
+}
+
+# ------------------------------------------------
+# MySQL
+# ------------------------------------------------
+mysql_init() {
+	password_generate MYSQL_ROOT_PASSWORD
+
+	docker-compose run \
+		-e "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" \
+		-d $SERVICE_MYSQL
+
+	local container=$(docker-compose ps -q $SERVICE_MYSQL)
+	perl - $container << 'EOS'
+use strict; $|=1;
+my $kid=open(my $log,"docker logs -f $ARGV[0] 2>&1 | ") || die $!;
+my $count=0;
+while(<$log>) {
+	print "$_";
+	if(m#\Qready for connections.\E#s ){
+		$count++;
+		if($count==2) {
+			kill 2,$kid;
+			print "初期化を確認しました\n";
+			exit(0);
+		}
+	}
+	if(m#\Q[ERROR]\E#s ){
+		kill 2,$kid;
+		print "初期化に失敗しました\n";
+		exit(1);
+	}
+}
+EOS
+	create_db_users mysql_create_db_user MYSQL
+}
+mysql_create_db_user() {
+	local num=$1
+	local db=$2
+	local user=$3
+	local password=$4
+	local container=$(docker-compose ps -q $SERVICE_MYSQL)
+	if [ -z "$password" ]; then
+		password_generate 'MYSQL_'$i'_PASSWORD'
+		password=$( eval 'echo "$MYSQL_'$i'_PASSWORD"')
+	fi
+	docker exec -i $container mysql -u root -p$MYSQL_ROOT_PASSWORD -v << EOS
+CREATE DATABASE $db default character set utf8mb4;
+GRANT ALTER,CREATE,DELETE,DROP,INDEX,INSERT,SELECT,UPDATE
+  ON $db.* TO $user@'%'
+  IDENTIFIED BY '$password';
+EOS
+}
+
+# ------------------------------------------------
+# PostgreSQL
+# ------------------------------------------------
+pgsql_init() {
+	password_generate PGSQL_POSTGRES_PASSWORD
+
+	docker-compose run \
+		-e "POSTGRES_PASSWORD=$PGSQL_POSTGRES_PASSWORD" \
+		-d $SERVICE_PGSQL
+
+	local container=$(docker-compose ps -q $SERVICE_PGSQL)
+	perl - $container << 'EOS'
+use strict; $|=1;
+my $kid=open(my $log,"docker logs -f $ARGV[0] 2>&1 | ") || die $!;
+while(<$log>) {
+	print "$_";
+	if(m#\QPostgreSQL init process complete; ready for start up.\E#s ){
+		kill 2,$kid;
+		print "初期化を確認しました\n";
+		exit(0);
+	}
+	if(m#\Q[ERROR]\E#s ){
+		kill 2,$kid;
+		print "初期化に失敗しました\n";
+		exit(1);
+	}
+}
+EOS
+	create_db_users pgsql_create_db_user PGSQL
+}
+pgsql_create_db_user() {
+	local num=$1
+	local db=$2
+	local user=$3
+	local password=$4
+	local container=$(docker-compose ps -q $SERVICE_PGSQL)
+	if [ -z "$password" ]; then
+		password_generate 'PGSQL_'$i'_PASSWORD'
+		password=$( eval 'echo "$PGSQL_'$i'_PASSWORD"')
+	fi
+	docker exec -i $container psql -U postgres << EOS
+CREATE DATABASE $db;
+CREATE USER $user WITH ENCRYPTED PASSWORD '$password';
+GRANT ALL PRIVILEGES ON DATABASE $db TO $user;
+EOS
+}
+
+# run
+run() {
+    for i in $COMMANDS; do
+    if [ "$i" == "${1:-}" ]; then
+        shift
+        do_$i $@
+        exit 0
+    fi
+    done
+    echo "USAGE: $( basename $0 ) COMMAND"
+    echo "COMMANDS:"
+    for i in $COMMANDS; do
+    echo "   $i"
+    done
+    exit 1
+}
+

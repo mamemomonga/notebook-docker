@@ -1,15 +1,13 @@
-# MariaDB, PostgreSQLを素早く設定する
+# MariaDB, PostgreSQL 初期化ツールとテンプレート
 
-* MySQL root パスワード, PostgreSQL postgres パスワードを自動生成してデータベースを初期化する
 * docker, docker-compose が必要
 * MySQLが13306/TCP, PostgreSQLが15432/TCPとしてExposeされる
-* それぞれのパスワードは .password-mariadb, .password-pgsql に保存される
 * データはNamed Volumeに保存される 
-* COMPOSE\_PROJECT\_NAMEは.envで設定する
+* MySQL root パスワード, PostgreSQL postgres パスワードを自動生成してデータベースを初期化する
+* データベースとユーザを複数作成し、ランダムなパスワードを設定する
+* 設定やパスワードは .env に保存される。ファイルがない場合は自動生成される。
 
 # 使い方
-
-このコマンドを実行するとすべてのデータベースとパスワードが削除される
 
 	$ ./databases.sh create
 	$ docker-compose up -d
@@ -20,3 +18,4 @@
 	postgres=# \q
 
 	$ ./database.sh destroy
+
