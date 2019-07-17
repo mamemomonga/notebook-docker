@@ -75,12 +75,7 @@ create_db_users() {
 	done
 }
 
-# 破壊
-destroy() {
-	docker-compose down || true
-	docker volume rm $COMPOSE_PROJECT_NAME'-'$SERVICE_MYSQL || true
-	docker volume rm $COMPOSE_PROJECT_NAME'-'$SERVICE_PGSQL || true
-}
+
 
 # ------------------------------------------------
 # MySQL
