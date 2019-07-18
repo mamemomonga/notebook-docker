@@ -11,11 +11,13 @@ SERVICE_PGSQL=pgsql
 
 # 作成
 do_create() {
-	docker-compose down || true
-	docker volume rm $COMPOSE_PROJECT_NAME'-'$SERVICE_MYSQL || true
-	docker volume rm $COMPOSE_PROJECT_NAME'-'$SERVICE_PGSQL || true
-	volume_create $COMPOSE_PROJECT_NAME'-'$SERVICE_MYSQL
-	volume_create $COMPOSE_PROJECT_NAME'-'$SERVICE_PGSQL
+	if [ -e $ENVFILE ]; then
+		docker-compose down || true
+	fi
+	docker volume rm $MYSQL_VOLUME || true
+	docker volume rm $PGSQL_VOLUME || true
+	volume_create $MYSQL_VOLUME
+	volume_create $PGSQL_VOLUME
 	mysql_init
 	pgsql_init
 	docker-compose down
@@ -23,9 +25,11 @@ do_create() {
 
 # 破壊
 do_destroy() {
-	docker-compose down || true
-	docker volume rm $COMPOSE_PROJECT_NAME'-'$SERVICE_MYSQL || true
-	docker volume rm $COMPOSE_PROJECT_NAME'-'$SERVICE_PGSQL || true
+	if [ -e $ENVFILE ]; then
+		docker-compose down || true
+	fi
+	docker volume rm $MYSQL_VOLUME || true
+	docker volume rm $PGSQL_VOLUME || true
 	rm -f $ENVFILE
 }
 
@@ -48,6 +52,16 @@ if [ ! -e "$ENVFILE" ]; then
 COMPOSE_PROJECT_NAME=database
 
 # -- MySQL ---------------------
+
+# Dockerイメージ
+MYSQL_IMAGE=mariadb:10.4
+
+# データボリューム
+MYSQL_VOLUME=database-mariadb
+
+# docker-compose Service名
+MYSQL_SERVICE=mariadb
+
 # Rootパスワード
 MYSQL_ROOT_PASSWORD=
 
@@ -62,6 +76,16 @@ MYSQL_2_USER=user2
 MYSQL_2_PASSWORD=
 
 # -- PostgreSQL ----------------
+
+# Dockerイメージ
+PGSQL_IMAGE=postgres:11
+
+# データボリューム
+PGSQL_VOLUME=database-pgsql
+
+# docker-compose Service名
+PGSQL_SERVICE=pgsql
+
 # postgresパスワード
 PGSQL_POSTGRES_PASSWORD=
 
@@ -69,6 +93,16 @@ PGSQL_POSTGRES_PASSWORD=
 PGSQL_1_DB=database3
 PGSQL_1_USER=user3
 PGSQL_1_PASSWORD=
+
+# DB設定2
+PGSQL_2_DB=database4
+PGSQL_2_USER=user4
+PGSQL_2_PASSWORD=
+
+# DB設定3
+PGSQL_3_DB=database5
+PGSQL_3_USER=user5
+PGSQL_3_PASSWORD=
 
 EOS
 fi

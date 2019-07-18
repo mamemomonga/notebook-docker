@@ -75,20 +75,21 @@ create_db_users() {
 	done
 }
 
-
-
 # ------------------------------------------------
 # MySQL
 # ------------------------------------------------
 mysql_init() {
 	password_generate MYSQL_ROOT_PASSWORD
 
-	docker-compose run \
+	CURRENT_CONTAINER=$(
+	docker run -d --rm \
+		-v $MYSQL_VOLUME:/var/lib/mysql \
+		-v $BASEDIR/etc/mysqld/my.cnf:/etc/mysql/conf.d/my.cnf \
 		-e "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" \
-		-d $SERVICE_MYSQL
+		$MYSQL_IMAGE
+	)
 
-	local container=$(docker-compose ps -q $SERVICE_MYSQL)
-	perl - $container << 'EOS'
+	perl - $CURRENT_CONTAINER << 'EOS'
 use strict; $|=1;
 my $kid=open(my $log,"docker logs -f $ARGV[0] 2>&1 | ") || die $!;
 my $count=0;
@@ -110,18 +111,18 @@ while(<$log>) {
 }
 EOS
 	create_db_users mysql_create_db_user MYSQL
+	docker rm -f $CURRENT_CONTAINER
 }
 mysql_create_db_user() {
 	local num=$1
 	local db=$2
 	local user=$3
 	local password=$4
-	local container=$(docker-compose ps -q $SERVICE_MYSQL)
 	if [ -z "$password" ]; then
 		password_generate 'MYSQL_'$i'_PASSWORD'
 		password=$( eval 'echo "$MYSQL_'$i'_PASSWORD"')
 	fi
-	docker exec -i $container mysql -u root -p$MYSQL_ROOT_PASSWORD -v << EOS
+	docker exec -i $CURRENT_CONTAINER mysql -u root -p$MYSQL_ROOT_PASSWORD -v << EOS
 CREATE DATABASE $db default character set utf8mb4;
 GRANT ALTER,CREATE,DELETE,DROP,INDEX,INSERT,SELECT,UPDATE
   ON $db.* TO $user@'%'
@@ -135,12 +136,15 @@ EOS
 pgsql_init() {
 	password_generate PGSQL_POSTGRES_PASSWORD
 
-	docker-compose run \
+	CURRENT_CONTAINER=$(
+	docker run -d --rm \
+		-v $PGSQL_VOLUME:/var/lib/postgresql/data \
+		-v $BASEDIR/etc/postgresql.conf:/etc/postgresql/postgresql.conf:ro \
 		-e "POSTGRES_PASSWORD=$PGSQL_POSTGRES_PASSWORD" \
-		-d $SERVICE_PGSQL
+		$PGSQL_IMAGE
+	)
 
-	local container=$(docker-compose ps -q $SERVICE_PGSQL)
-	perl - $container << 'EOS'
+	perl - $CURRENT_CONTAINER << 'EOS'
 use strict; $|=1;
 my $kid=open(my $log,"docker logs -f $ARGV[0] 2>&1 | ") || die $!;
 while(<$log>) {
@@ -158,18 +162,18 @@ while(<$log>) {
 }
 EOS
 	create_db_users pgsql_create_db_user PGSQL
+	docker rm -f $CURRENT_CONTAINER
 }
 pgsql_create_db_user() {
 	local num=$1
 	local db=$2
 	local user=$3
 	local password=$4
-	local container=$(docker-compose ps -q $SERVICE_PGSQL)
 	if [ -z "$password" ]; then
 		password_generate 'PGSQL_'$i'_PASSWORD'
 		password=$( eval 'echo "$PGSQL_'$i'_PASSWORD"')
 	fi
-	docker exec -i $container psql -U postgres << EOS
+	docker exec -i $CURRENT_CONTAINER psql -U postgres << EOS
 CREATE DATABASE $db;
 CREATE USER $user WITH ENCRYPTED PASSWORD '$password';
 GRANT ALL PRIVILEGES ON DATABASE $db TO $user;
