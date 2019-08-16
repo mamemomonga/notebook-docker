@@ -9,13 +9,14 @@
 
 # 使い方
 
-	$ ./databases.sh create
+	$ make create
+
 	$ docker-compose up -d
-	$ ./database.sh myql
+	$ ./bin/dbms.sh myql
 	MariaDB [(none)]> exit
 
-	$ ./database.sh psql
+	$ ./bin/dbms.sh psql
 	postgres=# \q
 
-	$ ./database.sh destroy
+	$ make destroy
 
