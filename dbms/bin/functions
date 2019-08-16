@@ -8,7 +8,7 @@
 # .env ファイルを読み込んでシェル変数として展開
 env_load() {
 	if [ -e $ENVFILE ]; then
-		eval $( cat $ENVFILE | perl -E 'while(<>) { if (s#^([^=]+)=(.+)$#$1="$2"#) { print }}' )
+		eval $( cat $ENVFILE | perl -E 'while(<>) { if (s#^([^\W]+)=(.+)$#$1="$2"#) { print }}' )
 	fi
 }
 

@@ -1,21 +1,21 @@
 version: "3.7"
 
 volumes:
-  mariadb: { external: { name: "${MYSQL_VOLUME}" }}
-  pgsql:   { external: { name: "${PGSQL_VOLUME}" }}
+  mysql: { external: { name: "${MYSQL_VOLUME}" }}
+  pgsql: { external: { name: "${PGSQL_VOLUME}" }}
 
-networks:
-   default:
-     ipam:
-       driver: default
-       config:
-        - subnet: "172.22.2.0/24"
+# networks:
+#    default:
+#      ipam:
+#        driver: default
+#        config:
+#         - subnet: "172.22.2.0/24"
 
 services:
-  mariadb:
+  mysql:
     image: ${MYSQL_IMAGE}
     volumes:
-      - mariadb:/var/lib/mysql
+      - mysql:/var/lib/mysql
       - ./etc/mysqld/my.cnf:/etc/mysql/conf.d/my.cnf:ro
       - ./etc/mysqld/timezone.cnf:/etc/mysql/conf.d/timezone.cnf:ro
     ports:

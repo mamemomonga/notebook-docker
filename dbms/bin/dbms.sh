@@ -41,12 +41,12 @@ do_pgsql_destroy() {
 }
 
 do_mysql() {
-	exec docker-compose exec mariadb mysql -p$MYSQL_ROOT_PASSWORD $@
+	exec docker-compose exec $MYSQL_SERVICE mysql -p$MYSQL_ROOT_PASSWORD $@
 }
 
 # psql
 do_psql() {
-	exec docker-compose exec pgsql psql -U postgres $@
+	exec docker-compose exec $PGSQL_SERVICE psql -U postgres $@
 }
 
 # 初期化
