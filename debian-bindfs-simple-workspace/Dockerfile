@@ -1,4 +1,4 @@
-FROM ubuntu:bionic
+FROM debian:buster
 
 RUN set -xe && \
 	rm -f /etc/localtime && \
@@ -9,7 +9,7 @@ RUN set -xe && \
 	export DEBIAN_FRONTEND=noninteractive && \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
-		gosu curl apt-transport-https \
+		gosu curl apt-transport-https ca-certificates \
 		git-core locales vim sudo screen make man && \
 	rm -rf /var/lib/apt/lists/*
 
@@ -27,5 +27,4 @@ ADD assets/ /
 
 RUN set -xe && \
 	echo 'source /etc/screenrc.local' >> /etc/screenrc
-
 

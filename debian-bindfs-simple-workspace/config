@@ -1,3 +1,3 @@
-NAME="ubuntu-bindfs-simple-workspace"
+NAME="debian-bindfs-simple-workspace"
 IMAGE_NAME="$NAME:latest"
 CONTAINER_NAME=$NAME"_1"

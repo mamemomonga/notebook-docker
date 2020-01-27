@@ -1,6 +1,6 @@
 # 作業環境
 
-Ubuntu Bionicの作業環境です。
+Debian Busterの作業環境です。
 
 コンテナ内部の  の appユーザが作成され、
 ローカル の home/app が bindfs により /home/app にマウントされます。
